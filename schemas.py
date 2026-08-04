@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime
 
 class UserCreate(BaseModel):
     username: str
@@ -12,6 +13,14 @@ class UserLogin(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class UserOut(BaseModel):
+    id: int
+    username: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 class QuestionBase(BaseModel):
     question: str
