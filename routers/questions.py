@@ -8,20 +8,37 @@ from auth_utils import get_current_user
 
 router = APIRouter(prefix="/api/questions", tags=["questions"])
 
+
 @router.get("/", response_model=List[QuestionOut])
 def list_questions(
-    limit: int = Query(10, ge=1, le=50),
-    category: Optional[str] = None,
-    difficulty: Optional[str] = None,
-    db: Session = Depends(get_db)
+        limit: int = Query(10, ge=1, le=50),
+        category: Optional[str] = None,
+        difficulty: Optional[str] = None,
+        db: Session = Depends(get_db)
 ):
-    return get_questions(db, limit, category, difficulty)
+    questions = get_questions(db, limit, category, difficulty)
+
+    result = []
+    for q in questions:
+        result.append({
+            "id": str(q.id),
+            "question": q.question_text,
+            "correctAnswer": q.correct_answer,
+            "incorrectAnswers": q.incorrect_answers,
+            "category": q.category.name if q.category else "Unknown",
+            "difficulty": q.difficulty,
+            "tags": q.tags if q.tags else [],
+            "type": q.type if q.type else "multiple_choice",
+            "regions": q.regions if q.regions else [],
+            "isNiche": q.is_niche if q.is_niche is not None else False
+        })
+    return result
 
 @router.post("/answer", response_model=AnswerResult)
 def answer_question(
-    payload: AnswerSubmit,
-    db: Session = Depends(get_db),
-    user=Depends(get_current_user)
+        payload: AnswerSubmit,
+        db: Session = Depends(get_db),
+        user=Depends(get_current_user)
 ):
     q = get_question(db, payload.question_id)
     if not q:

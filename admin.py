@@ -8,7 +8,16 @@ class UserAdmin(ModelView, model=User):
     column_searchable_list = [User.username]
 
 class QuestionAdmin(ModelView, model=Question):
-    column_list = [Question.id, Question.question_text, Question.difficulty, Question.category]
+    column_list = [
+        Question.id,
+        Question.question_text,
+        Question.difficulty,
+        Question.category,
+        Question.tags,
+        Question.type,
+        Question.regions,
+        Question.is_niche
+    ]
     column_searchable_list = [Question.question_text]
 
 class CategoryAdmin(ModelView, model=Category):
