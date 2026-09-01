@@ -1,0 +1,7 @@
+bcrypt~=5.0.0
+python-jose~=3.5.0
+SQLAlchemy~=2.0.51
+fastapi~=0.141.1
+sqladmin~=0.31.0
+python-dotenv~=1.2.2
+pydantic~=2.13.4

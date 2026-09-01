@@ -1,25 +1,22 @@
 import sys
 from pathlib import Path
 
-# Add current directory to path
 sys.path.append(str(Path(__file__).parent))
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from database import engine, Base
-from routers import auth, questions, users
-
+from fastapi.staticfiles import StaticFiles
+from database import engine, Base, migrate_schema
+from routers import auth, questions, users, categories
 from admin import setup_admin
 
-# Create database tables
+migrate_schema()
 Base.metadata.create_all(bind=engine)
 
-# Initialize app
-app = FastAPI(title="QuizeApp API", version="1.0.0")
+app = FastAPI(title="QuizeApp API", version="1.1.0")
 
-admin = setup_admin(app)
+setup_admin(app)
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -28,14 +25,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register routers
+MEDIA_DIR = Path(__file__).parent / "media"
+MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
+
 app.include_router(auth.router)
 app.include_router(questions.router)
 app.include_router(users.router)
+app.include_router(categories.router)
+
 
 @app.get("/")
 def root():
     return {"message": "QuizeApp API is running"}
+
 
 @app.get("/health")
 def health():
