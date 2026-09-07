@@ -32,19 +32,11 @@ def list_questions(
         ge=1,
         le=50
     ),
-
     category: Optional[str] = None,
-
     difficulty: Optional[str] = None,
-
-    # Multiple values are supported:
-    #
-    # /api/questions/?media_types=text&media_types=audio
-    #
     media_types: Optional[List[str]] = Query(
         None
     ),
-
     db: Session = Depends(get_db)
 ):
     questions = get_questions(
@@ -58,55 +50,40 @@ def list_questions(
     return [
         {
             "id": str(question.id),
-
             "question": question.question_text,
-
             "correctAnswer": question.correct_answer,
-
             "incorrectAnswers": (
                 question.incorrect_answers
                 if question.incorrect_answers
                 else []
             ),
-
             "category": (
                 question.category.name
                 if question.category
                 else "Unknown"
             ),
-
             "difficulty": question.difficulty,
-
             "tags": (
                 question.tags
                 if question.tags
                 else []
             ),
-
-            # Answer mechanism.
-            # Always multiple choice.
             "type": (
                 question.type
                 if question.type
                 else "multiple_choice"
             ),
-
-            # Actual content/media type.
-            # text / audio / image
             "mediaType": (
                 question.media_type
                 if question.media_type
                 else "text"
             ),
-
             "mediaUrl": question.media_url,
-
             "regions": (
                 question.regions
                 if question.regions
                 else []
             ),
-
             "isNiche": (
                 question.is_niche
                 if question.is_niche is not None
@@ -123,9 +100,7 @@ def list_questions(
 )
 def answer_question(
     payload: AnswerSubmit,
-
     db: Session = Depends(get_db),
-
     user=Depends(get_current_user)
 ):
     question = get_question(

@@ -6,16 +6,33 @@ sys.path.append(str(Path(__file__).parent))
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+
 from database import engine, Base, migrate_schema
-from routers import auth, questions, users, categories
+
+from routers import (
+    auth,
+    questions,
+    users,
+    categories,
+    results
+)
+
 from admin import setup_admin
 
+
 migrate_schema()
+
 Base.metadata.create_all(bind=engine)
 
-app = FastAPI(title="QuizeApp API", version="1.1.0")
+
+app = FastAPI(
+    title="QuizeApp API",
+    version="1.1.0"
+)
+
 
 setup_admin(app)
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,21 +42,40 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 MEDIA_DIR = Path(__file__).parent / "media"
-MEDIA_DIR.mkdir(parents=True, exist_ok=True)
-app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
+
+MEDIA_DIR.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+
+app.mount(
+    "/media",
+    StaticFiles(
+        directory=str(MEDIA_DIR)
+    ),
+    name="media"
+)
+
 
 app.include_router(auth.router)
 app.include_router(questions.router)
 app.include_router(users.router)
 app.include_router(categories.router)
+app.include_router(results.router)
 
 
 @app.get("/")
 def root():
-    return {"message": "QuizeApp API is running"}
+    return {
+        "message": "QuizeApp API is running"
+    }
 
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {
+        "status": "ok"
+    }

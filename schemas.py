@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -12,15 +12,17 @@ class QuestionBase(BaseModel):
 
     tags: List[str] = ["general"]
 
-    # Every question is multiple choice.
     type: str = "multiple_choice"
 
-    # Content/media type:
-    # text / audio / image
-    media_type: str = "text"
+    media_type: str = Field(
+        default="text",
+        alias="mediaType"
+    )
 
-    # NULL for normal text questions.
-    media_url: Optional[str] = None
+    media_url: Optional[str] = Field(
+        default=None,
+        alias="mediaUrl"
+    )
 
     regions: List[str] = ["global"]
 
@@ -65,31 +67,31 @@ class CategoryOut(BaseModel):
         from_attributes = True
 
 
-class QuestionOut(BaseModel):
+class QuestionOut(QuestionBase):
     id: str
-    question: str
-    correctAnswer: str
-    incorrectAnswers: List[str]
-    category: str
-    difficulty: str
 
     tags: List[str] = []
 
-    # This remains the answer mechanism.
     type: str = "multiple_choice"
 
-    # This is the actual Question media type.
-    mediaType: str = "text"
+    media_type: str = Field(
+        default="text",
+        alias="mediaType"
+    )
 
-    # Relative/absolute URL for audio/image.
-    mediaUrl: Optional[str] = None
+    media_url: Optional[str] = Field(
+        default=None,
+        alias="mediaUrl"
+    )
 
     regions: List[str] = []
 
     isNiche: bool = False
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True
+    )
 
 
 class AnswerSubmit(BaseModel):
@@ -117,3 +119,23 @@ class StatsOut(BaseModel):
     total_questions: int
     correct_count: int
     accuracy: float
+
+
+class QuizResultCreate(BaseModel):
+    category: str
+    question_types: List[str]
+    question_count: int
+    correct_count: int
+
+
+class QuizResultOut(BaseModel):
+    id: int
+    category: str
+    question_types: List[str]
+    question_count: int
+    correct_count: int
+    score: int
+    completed_at: datetime
+
+    class Config:
+        from_attributes = True

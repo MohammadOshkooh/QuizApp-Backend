@@ -4,7 +4,6 @@ from database import Base
 from datetime import datetime
 
 
-# User model
 class User(Base):
     __tablename__ = "users"
 
@@ -15,9 +14,9 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     history = relationship("History", back_populates="user")
+    quiz_results = relationship("QuizResult", back_populates="user")
 
 
-# Category model
 class Category(Base):
     __tablename__ = "categories"
 
@@ -29,7 +28,7 @@ class Category(Base):
     def __str__(self):
         return self.name
 
-# Question model
+
 class Question(Base):
     __tablename__ = "questions"
 
@@ -39,40 +38,32 @@ class Question(Base):
 
     correct_answer = Column(String)
 
-    incorrect_answers = Column(JSON)  # list of strings
+    incorrect_answers = Column(JSON)
 
     category_id = Column(
         Integer,
         ForeignKey("categories.id")
     )
 
-    difficulty = Column(String)  # easy, medium, hard
+    difficulty = Column(String)
 
     tags = Column(
         JSON,
         default=[]
     )
 
-    # All questions are multiple choice.
     type = Column(
         String,
         default="multiple_choice",
         nullable=False
     )
 
-    # Content type of the question.
-    # Supported values:
-    # text
-    # audio
-    # image
     media_type = Column(
         String,
         default="text",
         nullable=False
     )
 
-    # Used by audio/image questions.
-    # NULL for text questions.
     media_url = Column(
         String,
         nullable=True
@@ -101,7 +92,7 @@ class Question(Base):
     def __str__(self):
         return self.question_text
 
-# History model (user answers)
+
 class History(Base):
     __tablename__ = "history"
 
@@ -119,7 +110,7 @@ class History(Base):
 
     is_correct = Column(
         Integer
-    )  # 1 = True, 0 = False
+    )
 
     answered_at = Column(
         DateTime,
@@ -134,4 +125,53 @@ class History(Base):
     question = relationship(
         "Question",
         back_populates="history_items"
+    )
+
+
+class QuizResult(Base):
+    __tablename__ = "quiz_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(
+        Integer,
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True
+    )
+
+    category = Column(
+        String,
+        nullable=False
+    )
+
+    question_types = Column(
+        JSON,
+        nullable=False
+    )
+
+    question_count = Column(
+        Integer,
+        nullable=False
+    )
+
+    correct_count = Column(
+        Integer,
+        nullable=False
+    )
+
+    score = Column(
+        Integer,
+        nullable=False
+    )
+
+    completed_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    user = relationship(
+        "User",
+        back_populates="quiz_results"
     )

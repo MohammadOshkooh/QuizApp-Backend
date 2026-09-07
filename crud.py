@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 
-from models import User, Category, Question, History
+from models import User, Category, Question, History, QuizResult
 from schemas import UserCreate, QuestionBase
 from auth import hash_password
 
@@ -76,14 +76,9 @@ def create_question(db: Session, q: QuestionBase):
         category_id=category.id,
         difficulty=q.difficulty,
         tags=q.tags,
-
-        # All Quizella questions are multiple choice.
         type="multiple_choice",
-
-        # The media/content type is stored separately.
         media_type=q.media_type,
         media_url=q.media_url,
-
         regions=q.regions,
         is_niche=q.isNiche
     )
@@ -94,7 +89,6 @@ def create_question(db: Session, q: QuestionBase):
 
     return db_question
 
-
 def get_questions(
     db: Session,
     limit: int = 10,
@@ -102,11 +96,10 @@ def get_questions(
     difficulty: str = None,
     media_types: list[str] = None
 ):
-    query = (
-        db.query(Question)
-        .filter(
-            Question.type == "multiple_choice"
-        )
+    query = db.query(Question)
+
+    query = query.filter(
+        Question.type == "multiple_choice"
     )
 
     if category:
@@ -115,21 +108,17 @@ def get_questions(
             category
         )
 
-        # Do not accidentally return questions from every
-        # category when the requested category does not exist.
-        if not category_obj:
-            return []
-
-        query = query.filter(
-            Question.category_id == category_obj.id
-        )
+        if category_obj:
+            query = query.filter(
+                Question.category_id == category_obj.id
+            )
 
     if difficulty:
         query = query.filter(
             Question.difficulty == difficulty
         )
 
-    if media_types is not None:
+    if media_types:
         valid_media_types = {
             media_type
             for media_type in media_types
@@ -140,14 +129,12 @@ def get_questions(
             }
         }
 
-        # A supplied but invalid/empty media type list must
-        # not mean "remove the filter".
-        if not valid_media_types:
-            return []
-
-        query = query.filter(
-            Question.media_type.in_(valid_media_types)
-        )
+        if valid_media_types:
+            query = query.filter(
+                Question.media_type.in_(
+                    list(valid_media_types)
+                )
+            )
 
     return (
         query
@@ -184,3 +171,44 @@ def save_history(
     db.commit()
 
     return history
+
+
+def create_quiz_result(
+    db: Session,
+    user_id: int,
+    category: str,
+    question_types: list[str],
+    question_count: int,
+    correct_count: int
+):
+    result = QuizResult(
+        user_id=user_id,
+        category=category,
+        question_types=question_types,
+        question_count=question_count,
+        correct_count=correct_count,
+        score=correct_count
+    )
+
+    db.add(result)
+    db.commit()
+    db.refresh(result)
+
+    return result
+
+
+def get_quiz_results(
+    db: Session,
+    user_id: int
+):
+    return (
+        db.query(QuizResult)
+        .filter(
+            QuizResult.user_id == user_id
+        )
+        .order_by(
+            QuizResult.completed_at.desc(),
+            QuizResult.id.desc()
+        )
+        .all()
+    )
