@@ -3,9 +3,9 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from database import get_db
-from crud import get_user
 from config import settings
+from crud import get_user_by_id
+from database import get_db
 
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -17,6 +17,14 @@ def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={
+            "WWW-Authenticate": "Bearer"
+        }
+    )
+
     try:
         payload = jwt.decode(
             token,
@@ -24,29 +32,34 @@ def get_current_user(
             algorithms=[settings.ALGORITHM]
         )
 
-        username = payload.get("sub")
+        # We explicitly require the access-token type.
+        token_type = payload.get("type")
 
-        if not username:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token"
-            )
+        if token_type != "access":
+            raise credentials_exception
+
+        subject = payload.get("sub")
+
+        if subject is None:
+            raise credentials_exception
+
+        try:
+            user_id = int(subject)
+        except (TypeError, ValueError):
+            raise credentials_exception
+
+        if user_id < 1:
+            raise credentials_exception
 
     except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
+        raise credentials_exception
 
-    user = get_user(
+    user = get_user_by_id(
         db,
-        username
+        user_id
     )
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
+    if user is None:
+        raise credentials_exception
 
     return user

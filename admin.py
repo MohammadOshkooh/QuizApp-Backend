@@ -1,8 +1,8 @@
-from sqladmin import Admin, ModelView
 from fastapi import FastAPI
+from sqladmin import Admin, ModelView
 
 from database import engine
-from models import User, Question, Category, History
+from models import Category, History, Question, User
 
 
 class UserAdmin(ModelView, model=User):
@@ -14,6 +14,11 @@ class UserAdmin(ModelView, model=User):
 
     column_searchable_list = [
         User.username
+    ]
+
+    # Never expose password hashes through an editable admin field.
+    form_excluded_columns = [
+        User.hashed_password
     ]
 
 
@@ -51,6 +56,12 @@ class HistoryAdmin(ModelView, model=History):
         History.is_correct,
         History.answered_at
     ]
+
+    # Answer history is audit data; keeping it read-only avoids accidental
+    # score manipulation from the admin panel.
+    can_create = False
+    can_edit = False
+    can_delete = False
 
 
 def setup_admin(app: FastAPI):

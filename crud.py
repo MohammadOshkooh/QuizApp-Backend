@@ -1,43 +1,89 @@
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import User, Category, Question, History, QuizResult
-from schemas import UserCreate, QuestionBase
 from auth import hash_password
+from models import (
+    Category,
+    History,
+    Question,
+    QuizResult,
+    User
+)
+from schemas import (
+    QuestionBase,
+    UserCreate
+)
 
 
-def get_user(db: Session, username: str):
+def get_user(
+    db: Session,
+    username: str
+):
     return (
         db.query(User)
-        .filter(User.username == username)
+        .filter(
+            User.username == username
+        )
         .first()
     )
 
 
-def create_user(db: Session, user: UserCreate):
-    hashed = hash_password(user.password)
+def get_user_by_id(
+    db: Session,
+    user_id: int
+):
+    return (
+        db.query(User)
+        .filter(
+            User.id == user_id
+        )
+        .first()
+    )
+
+
+def create_user(
+    db: Session,
+    user: UserCreate
+):
+    hashed = hash_password(
+        user.password
+    )
 
     db_user = User(
         username=user.username,
-        hashed_password=hashed,
-        email=user.email
+        hashed_password=hashed
     )
 
     db.add(db_user)
-    db.commit()
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise
+
     db.refresh(db_user)
 
     return db_user
 
 
-def get_category(db: Session, name: str):
+def get_category(
+    db: Session,
+    name: str
+):
     return (
         db.query(Category)
-        .filter(Category.name == name)
+        .filter(
+            Category.name == name
+        )
         .first()
     )
 
 
-def get_categories(db: Session):
+def get_categories(
+    db: Session
+):
     return (
         db.query(Category)
         .order_by(Category.id)
@@ -45,19 +91,32 @@ def get_categories(db: Session):
     )
 
 
-def create_category(db: Session, name: str):
+def create_category(
+    db: Session,
+    name: str
+):
     category = Category(
         name=name
     )
 
     db.add(category)
-    db.commit()
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise
+
     db.refresh(category)
 
     return category
 
 
-def create_question(db: Session, q: QuestionBase):
+def create_question(
+    db: Session,
+    q: QuestionBase
+):
     category = get_category(
         db,
         q.category
@@ -84,10 +143,18 @@ def create_question(db: Session, q: QuestionBase):
     )
 
     db.add(db_question)
-    db.commit()
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise
+
     db.refresh(db_question)
 
     return db_question
+
 
 def get_questions(
     db: Session,
@@ -110,7 +177,8 @@ def get_questions(
 
         if category_obj:
             query = query.filter(
-                Question.category_id == category_obj.id
+                Question.category_id
+                == category_obj.id
             )
 
     if difficulty:
@@ -150,7 +218,9 @@ def get_question(
 ):
     return (
         db.query(Question)
-        .filter(Question.id == qid)
+        .filter(
+            Question.id == qid
+        )
         .first()
     )
 
@@ -168,7 +238,15 @@ def save_history(
     )
 
     db.add(history)
-    db.commit()
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise
+
+    db.refresh(history)
 
     return history
 
@@ -176,14 +254,107 @@ def save_history(
 def create_quiz_result(
     db: Session,
     user_id: int,
-    category: str,
-    question_types: list[str],
-    question_count: int,
-    correct_count: int
+    history_ids: list[int],
+    quiz_token_question_ids: set[int],
+    quiz_issued_at
 ):
+    histories = (
+        db.query(History)
+        .filter(
+            History.user_id == user_id,
+            History.id.in_(history_ids)
+        )
+        .all()
+    )
+
+    if len(histories) != len(history_ids):
+        raise ValueError(
+            "One or more answer records do not belong to the current user."
+        )
+
+    if any(
+        history.answered_at < quiz_issued_at
+        for history in histories
+    ):
+        raise ValueError(
+            "Quiz results can only contain answers from the current quiz session."
+        )
+
+    history_by_id = {
+        history.id: history
+        for history in histories
+    }
+
+    ordered_histories = [
+        history_by_id[history_id]
+        for history_id in history_ids
+    ]
+
+    question_ids = {
+        history.question_id
+        for history in ordered_histories
+    }
+
+    if not question_ids.issubset(quiz_token_question_ids):
+        raise ValueError(
+            "Answer records do not belong to the quiz session."
+        )
+
+    if len(question_ids) != len(ordered_histories):
+        raise ValueError(
+            "Each question can only appear once in a quiz result."
+        )
+
+    if question_ids != quiz_token_question_ids:
+        raise ValueError(
+            "Quiz result is incomplete or does not match the quiz session."
+        )
+
+    questions = (
+        db.query(Question)
+        .filter(
+            Question.id.in_(list(question_ids))
+        )
+        .all()
+    )
+
+    if len(questions) != len(question_ids):
+        raise ValueError(
+            "One or more questions no longer exist."
+        )
+
+    question_by_id = {
+        question.id: question
+        for question in questions
+    }
+
+    categories = {
+        question_by_id[history.question_id].category.name
+        for history in ordered_histories
+        if question_by_id[history.question_id].category
+    }
+
+    if len(categories) != 1:
+        raise ValueError(
+            "All questions in a quiz result must belong to one category."
+        )
+
+    question_types = sorted({
+        question_by_id[history.question_id].media_type
+        for history in ordered_histories
+    })
+
+    question_count = len(ordered_histories)
+
+    correct_count = sum(
+        1
+        for history in ordered_histories
+        if bool(history.is_correct)
+    )
+
     result = QuizResult(
         user_id=user_id,
-        category=category,
+        category=next(iter(categories)),
         question_types=question_types,
         question_count=question_count,
         correct_count=correct_count,
@@ -191,7 +362,14 @@ def create_quiz_result(
     )
 
     db.add(result)
-    db.commit()
+
+    try:
+        db.commit()
+
+    except IntegrityError:
+        db.rollback()
+        raise
+
     db.refresh(result)
 
     return result

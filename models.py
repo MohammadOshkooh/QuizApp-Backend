@@ -1,29 +1,83 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, JSON, Text, Boolean
-from sqlalchemy.orm import relationship
-from database import Base
 from datetime import datetime
+
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    JSON,
+    String,
+    Text
+)
+from sqlalchemy.orm import relationship
+
+from database import Base
 
 
 class User(Base):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    email = Column(String, unique=True, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    history = relationship("History", back_populates="user")
-    quiz_results = relationship("QuizResult", back_populates="user")
+    username = Column(
+        String,
+        unique=True,
+        index=True,
+        nullable=False
+    )
+
+    hashed_password = Column(
+        String,
+        nullable=False
+    )
+
+    created_at = Column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False
+    )
+
+    history = relationship(
+        "History",
+        back_populates="user"
+    )
+
+    quiz_results = relationship(
+        "QuizResult",
+        back_populates="user"
+    )
+    email = Column(
+        String,
+        unique=True,
+        nullable=True
+    )
+
 
 
 class Category(Base):
     __tablename__ = "categories"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    questions = relationship("Question", back_populates="category")
+    name = Column(
+        String,
+        unique=True,
+        index=True
+    )
+
+    questions = relationship(
+        "Question",
+        back_populates="category"
+    )
 
     def __str__(self):
         return self.name
@@ -32,24 +86,36 @@ class Category(Base):
 class Question(Base):
     __tablename__ = "questions"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
-    question_text = Column(Text)
+    question_text = Column(
+        Text
+    )
 
-    correct_answer = Column(String)
+    correct_answer = Column(
+        String
+    )
 
-    incorrect_answers = Column(JSON)
+    incorrect_answers = Column(
+        JSON
+    )
 
     category_id = Column(
         Integer,
         ForeignKey("categories.id")
     )
 
-    difficulty = Column(String)
+    difficulty = Column(
+        String
+    )
 
     tags = Column(
         JSON,
-        default=[]
+        default=lambda: ["general"]
     )
 
     type = Column(
@@ -71,7 +137,7 @@ class Question(Base):
 
     regions = Column(
         JSON,
-        default=[]
+        default=lambda: ["global"]
     )
 
     is_niche = Column(
@@ -96,25 +162,35 @@ class Question(Base):
 class History(Base):
     __tablename__ = "history"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     user_id = Column(
         Integer,
-        ForeignKey("users.id")
+        ForeignKey("users.id"),
+        nullable=False,
+        index=True
     )
 
     question_id = Column(
         Integer,
-        ForeignKey("questions.id")
+        ForeignKey("questions.id"),
+        nullable=False,
+        index=True
     )
 
     is_correct = Column(
-        Integer
+        Integer,
+        nullable=False
     )
 
     answered_at = Column(
         DateTime,
-        default=datetime.utcnow
+        default=datetime.utcnow,
+        nullable=False
     )
 
     user = relationship(
@@ -131,7 +207,11 @@ class History(Base):
 class QuizResult(Base):
     __tablename__ = "quiz_results"
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
 
     user_id = Column(
         Integer,
