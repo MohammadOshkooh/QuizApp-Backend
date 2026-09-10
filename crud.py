@@ -1,3 +1,4 @@
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -170,16 +171,14 @@ def get_questions(
     )
 
     if category:
-        category_obj = get_category(
-            db,
-            category
-        )
+        category_obj = get_category(db, category)
 
-        if category_obj:
-            query = query.filter(
-                Question.category_id
-                == category_obj.id
-            )
+        if not category_obj:
+            return []
+
+        query = query.filter(
+            Question.category_id == category_obj.id
+        )
 
     if difficulty:
         query = query.filter(
@@ -206,11 +205,10 @@ def get_questions(
 
     return (
         query
-        .order_by(Question.id)
+        .order_by(func.random())
         .limit(limit)
         .all()
     )
-
 
 def get_question(
     db: Session,
