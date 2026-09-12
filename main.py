@@ -110,7 +110,7 @@ async def protect_admin_panel(
                 },
                 headers={
                     "WWW-Authenticate":
-                        'Basic realm="Quizella Admin"'
+                        'Basic realm="QuizeApp Admin"'
                 }
             )
 
@@ -146,7 +146,7 @@ async def protect_admin_panel(
                 },
                 headers={
                     "WWW-Authenticate":
-                        'Basic realm="Quizella Admin"'
+                        'Basic realm="QuizeApp Admin"'
                 }
             )
 
@@ -167,7 +167,7 @@ async def protect_admin_panel(
                 },
                 headers={
                     "WWW-Authenticate":
-                        'Basic realm="Quizella Admin"'
+                        'Basic realm="QuizeApp Admin"'
                 }
             )
 

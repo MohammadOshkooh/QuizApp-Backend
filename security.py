@@ -6,14 +6,6 @@ from fastapi import HTTPException, Request, status
 
 
 class RateLimiter:
-    """
-    Simple in-memory rate limiter.
-
-    This is suitable for a single-instance university project.
-    If the application is later deployed across multiple workers/servers,
-    this should be replaced with a Redis-backed limiter.
-    """
-
     def __init__(
         self,
         max_requests: int,
@@ -50,14 +42,6 @@ class RateLimiter:
 
 
 def get_client_ip(request: Request) -> str:
-    """
-    Get the client IP.
-
-    We intentionally use request.client.host instead of blindly trusting
-    X-Forwarded-For because that header can be spoofed unless the application
-    is behind a trusted reverse proxy configured to overwrite it.
-    """
-
     if request.client is None:
         return "unknown"
 

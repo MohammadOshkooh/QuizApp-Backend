@@ -68,8 +68,8 @@ def list_questions(
     db: Session = Depends(get_db),
     user=Depends(get_current_user)
 ):
-    # Questions are protected because the database contains the authoritative
-    # quiz content. The correct answer is still never identified here.
+
+
     question_rate_limiter.check(
         f"questions:user:{user.id}"
     )
@@ -91,16 +91,9 @@ def list_questions(
         {
             "sub": str(user.id),
             "type": "quiz",
-
-            # FIX:
-            # token_urlsafe belongs to the secrets module,
-            # not SystemRandom.
             "jti": token_urlsafe(16),
-
             "question_ids": question_ids,
-
             "iat": datetime.now(timezone.utc),
-
             "exp": (
                 datetime.now(timezone.utc)
                 + timedelta(minutes=60)
@@ -110,37 +103,25 @@ def list_questions(
         algorithm=settings.ALGORITHM
     )
 
+    def shuffle_answers(question):
+        answers = [
+            question.correct_answer,
+            *(question.incorrect_answers or [])
+        ]
+
+        randomizer.shuffle(answers)
+
+        return answers
+
     return [
         {
             "id": str(question.id),
-
             "question": (
                 question.question_text
             ),
-
             "quizToken": quiz_token,
 
-            # IMPORTANT:
-            # The answer choices are returned without identifying the
-            # correct choice. The authoritative answer remains server-side.
-            "answers": randomizer.sample(
-                [
-                    question.correct_answer,
-                    *(
-                        question.incorrect_answers
-                        or []
-                    )
-                ],
-                k=len(
-                    [
-                        question.correct_answer,
-                        *(
-                            question.incorrect_answers
-                            or []
-                        )
-                    ]
-                )
-            ),
+            "answers": shuffle_answers(question),
 
             "category": (
                 question.category.name

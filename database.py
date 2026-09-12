@@ -5,8 +5,6 @@ from sqlalchemy.orm import sessionmaker
 from config import settings
 
 
-# SQLite needs check_same_thread=False.
-# PostgreSQL and other databases do not.
 connect_args = {}
 
 if settings.DATABASE_URL.startswith(

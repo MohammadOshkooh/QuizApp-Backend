@@ -1,4 +1,4 @@
-"""Add playable audio/image multiple-choice questions to Quizella."""
+"""Add playable audio/image multiple-choice questions to QuizApp."""
 
 import os
 import sys

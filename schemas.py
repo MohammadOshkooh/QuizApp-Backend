@@ -149,7 +149,7 @@ class UserLogin(BaseModel):
     )
 
     password: str = Field(
-        min_length=1,
+        min_length=3,
         max_length=72
     )
 

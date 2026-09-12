@@ -32,7 +32,7 @@ def get_current_user(
             algorithms=[settings.ALGORITHM]
         )
 
-        # We explicitly require the access-token type.
+        # explicitly require the access-token type.
         token_type = payload.get("type")
 
         if token_type != "access":
