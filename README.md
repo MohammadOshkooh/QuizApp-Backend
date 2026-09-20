@@ -1,6 +1,6 @@
-# Quizapp Backend 🎯
+# QuizApp Backend 🎯
 
-Backend service for **Quizapp**, an interactive quiz application with user authentication, configurable quizzes, question management, quiz history, and result tracking.
+Backend service for **QuizApp**, an interactive quiz application with user authentication, configurable quizzes, question management, quiz history, and result tracking.
 
 The backend is implemented as a RESTful API and serves the Android client.
 
@@ -198,7 +198,7 @@ Main entities:
 
 ## 🖼️ Media Support
 
-Quizapp supports:
+QuizApp supports:
 
 - 📝 Text questions
 - 🖼️ Image questions
@@ -349,7 +349,7 @@ See the companion Android repository for the client implementation.
 
 ## 🎓 Project Context
 
-Quizapp was originally based on an existing quiz application frontend and was substantially extended as part of a bachelor's degree project.
+QuizApp was originally based on an existing quiz application frontend and was substantially extended as part of a bachelor's degree project.
 
 The main focus of this work was the design and implementation of the backend, including:
 
