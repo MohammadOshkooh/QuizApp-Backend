@@ -59,7 +59,7 @@ register_rate_limiter = RateLimiter(
 )
 
 question_rate_limiter = RateLimiter(
-    max_requests=30,
+    max_requests=60,
     window_seconds=60
 )
 

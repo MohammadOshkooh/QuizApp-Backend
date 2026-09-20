@@ -25,7 +25,6 @@ class UserAdmin(ModelView, model=User):
         User.email
     ]
 
-    # Never expose password hashes
     form_excluded_columns = [
         User.hashed_password
     ]

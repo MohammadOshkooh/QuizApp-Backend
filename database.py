@@ -42,12 +42,7 @@ Base = declarative_base()
 
 
 def migrate_schema():
-    """
-    Apply SQLite schema/data migrations required
-    by the current Question model.
-    """
 
-    # The current migration code is SQLite-specific.
     if not settings.DATABASE_URL.startswith(
         "sqlite"
     ):
