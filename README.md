@@ -1,6 +1,6 @@
-# Quizella Backend 🎯
+# Quizapp Backend 🎯
 
-Backend service for **Quizella**, an interactive quiz application with user authentication, configurable quizzes, question management, quiz history, and result tracking.
+Backend service for **Quizapp**, an interactive quiz application with user authentication, configurable quizzes, question management, quiz history, and result tracking.
 
 The backend is implemented as a RESTful API and serves the Android client.
 
@@ -198,7 +198,7 @@ Main entities:
 
 ## 🖼️ Media Support
 
-Quizella supports:
+Quizapp supports:
 
 - 📝 Text questions
 - 🖼️ Image questions
@@ -349,7 +349,7 @@ See the companion Android repository for the client implementation.
 
 ## 🎓 Project Context
 
-Quizella was originally based on an existing quiz application frontend and was substantially extended as part of a bachelor's degree project.
+Quizapp was originally based on an existing quiz application frontend and was substantially extended as part of a bachelor's degree project.
 
 The main focus of this work was the design and implementation of the backend, including:
 
